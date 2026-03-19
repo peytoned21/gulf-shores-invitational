@@ -1753,26 +1753,22 @@ function updateScoreboard() {
             statusColor = st.ahead==='geo'?'var(--geo)':st.ahead==='usa'?'var(--usa)':'var(--gold)';
             statusTxt = st.text + ' (T' + st.holesPlayed + ')';
           }
-          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 13px;border-top:1px solid var(--border);cursor:pointer;" onclick="jumpToMatch('${s.id}')">
-            <div>
-              <div style="font-size:0.85rem;font-weight:600;">
-                <span style="color:var(--geo)">${s.geo[0]}</span>
-                <span style="color:var(--text-dim);font-size:0.72rem;margin:0 6px">vs</span>
-                <span style="color:var(--usa)">${s.usa[0]}</span>
-              </div>
-              <div style="font-size:0.62rem;color:var(--text-dim);margin-top:2px;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.06em">1 pt &middot; Singles</div>
+          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:11px 13px;border-top:1px solid var(--border);cursor:pointer;background:var(--surface);" onclick="jumpToMatch('${s.id}')">
+            <div style="font-size:0.88rem;font-weight:500;">
+              <span style="color:var(--geo)">${s.geo[0]}</span>
+              <span style="color:var(--text-dim);font-size:0.75rem;margin:0 7px">vs</span>
+              <span style="color:var(--usa)">${s.usa[0]}</span>
             </div>
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:0.75rem;font-weight:800;color:${statusColor}">${statusTxt}</div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-family:'Barlow Condensed',sans-serif;font-size:0.6rem;color:var(--text-dim);">1 pt</span>
+              <span class="msr-badge" style="font-size:0.65rem;padding:3px 10px;${st.status==='complete'?(st.ahead==='geo'?'background:rgba(224,85,85,.18);color:var(--geo)':st.ahead==='usa'?'background:rgba(85,144,232,.18);color:var(--usa)':'background:rgba(232,204,0,.15);color:var(--gold)'):st.status==='live'?(st.ahead==='geo'?'background:rgba(224,85,85,.12);color:var(--geo)':st.ahead==='usa'?'background:rgba(85,144,232,.12);color:var(--usa)':'background:rgba(232,204,0,.1);color:var(--gold)'):'background:rgba(255,255,255,.06);color:var(--text-dim)'}">${statusTxt}</span>
+            </div>
           </div>`;
         }).join('');
 
-        html += `<div class="match-summary-row" style="cursor:default;flex-direction:column;align-items:stretch;gap:0;padding:0;overflow:hidden;">
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:11px 13px;">
-            <div>
-              <div class="msr-label">Match 3</div>
-              <div class="msr-sub">2 pts &middot; 1v1 Singles</div>
-            </div>
-            <div class="msr-badge" style="${groupBg}">${groupTxt}</div>
+        html += `<div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:5px;">
+          <div style="padding:8px 13px;background:rgba(0,0,0,0.2);">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:0.6rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-dim);">Match 3 &middot; 1v1 Singles &middot; 2 pts total</div>
           </div>
           ${subRows}
         </div>`;
