@@ -165,11 +165,11 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;font
 .who-title{font-family:'Barlow Condensed',sans-serif;font-size:1.6rem;font-weight:900;letter-spacing:0.05em;text-transform:uppercase;color:var(--gold);margin-bottom:4px;}
 .who-sub{font-size:0.78rem;color:var(--text-dim);margin-bottom:28px;}
 .who-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;max-width:340px;}
-.who-btn{font-family:'Barlow Condensed',sans-serif;font-size:0.88rem;font-weight:700;letter-spacing:0.04em;padding:14px 10px;border-radius:10px;border:1.5px solid var(--border2);background:var(--surface);color:var(--text);cursor:pointer;transition:all .18s;text-align:center;}
+.who-btn{font-family:'Barlow Condensed',sans-serif;font-size:0.88rem;font-weight:700;letter-spacing:0.04em;padding:10px;border-radius:8px;border:1.5px solid var(--border2);background:var(--surface);color:var(--text);cursor:pointer;transition:all .18s;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:56px;width:100%;}
 .who-btn:hover,.who-btn:active{transform:scale(0.97);}
 .who-btn.geo{border-color:rgba(224,85,85,0.4);background:var(--geo-dim);}
 .who-btn.usa{border-color:rgba(85,144,232,0.4);background:var(--usa-dim);}
-.who-btn .who-hcp{display:block;font-size:0.58rem;font-weight:500;opacity:0.55;margin-top:2px;}
+.who-btn .who-hcp{display:block;font-size:0.55rem;font-weight:500;opacity:0.55;margin-top:2px;}
 .who-team-label{font-family:'Barlow Condensed',sans-serif;font-size:0.58rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px;width:100%;max-width:340px;text-align:left;}
 
 /* ══ SCORE ENTRY SCREEN ══ */
@@ -478,7 +478,9 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;font
 
 <!-- LEADERBOARD -->
 <div class="panel" id="tab-leaderboard">
-  <div class="section-title">Net Stableford &mdash; Both Days</div>
+  <!-- Team Stableford aggregate -->
+  <div id="team-stab-summary" style="display:none;margin-bottom:14px;"></div>
+  <div class="section-title">Net Stableford &mdash; Individual</div>
   <div class="lb-table">
     <div class="lb-head"><span>#</span><span>Player</span><span style="text-align:center">Fri</span><span style="text-align:center">Sat</span><span class="r">Total</span></div>
     <div id="lb-rows"></div>
@@ -541,7 +543,7 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;font
       <div id="hm-body" class="bs-body"></div>
       <div class="bs-actions">
         <button class="bs-btn danger" onclick="openConcede()">Concede hole</button>
-        <button class="bs-btn" onclick="clearHoleModal()">Clear scores</button>
+        <button class="bs-btn" onclick="clearHoleModal()">Clear / Undo Concede</button>
         <button class="bs-btn confirm" onclick="confirmHoleModal()">Done</button>
       </div>
     </div>
@@ -640,18 +642,18 @@ const ALL_MATCHES = [...MATCHES.fri, ...MATCHES.sat];
 
 // ══ PLAYERS ══
 let PLAYERS = [
-  { name:'Dustin',   hcp:6,  team:'geo' },
-  { name:'Peyton',   hcp:10, team:'geo' },
-  { name:'Nathan',   hcp:8,  team:'geo' },
-  { name:'Kunal',    hcp:14, team:'geo' },
-  { name:'Miguel',   hcp:18, team:'geo' },
-  { name:'Chris',    hcp:20, team:'geo' },
-  { name:'Mack',     hcp:7,  team:'usa' },
-  { name:'Connor',   hcp:11, team:'usa' },
-  { name:'Tolliver', hcp:9,  team:'usa' },
-  { name:'Jerry',    hcp:18, team:'usa' },
-  { name:'KCopp',    hcp:13, team:'usa' },
-  { name:'Yang',     hcp:19, team:'usa' },
+  { name:'Dustin',   hcp:6,  team:'geo', days:['fri','sat'] },
+  { name:'Peyton',   hcp:10, team:'geo', days:['fri'] },
+  { name:'Nathan',   hcp:8,  team:'geo', days:['fri','sat'] },
+  { name:'Kunal',    hcp:14, team:'geo', days:['fri'] },
+  { name:'Miguel',   hcp:18, team:'geo', days:['fri'] },
+  { name:'Chris',    hcp:20, team:'geo', days:['sat'] },
+  { name:'Mack',     hcp:7,  team:'usa', days:['fri','sat'] },
+  { name:'Connor',   hcp:11, team:'usa', days:['fri','sat'] },
+  { name:'Tolliver', hcp:9,  team:'usa', days:['fri','sat'] },
+  { name:'Jerry',    hcp:18, team:'usa', days:['fri'] },
+  { name:'KCopp',    hcp:13, team:'usa', days:['fri','sat'] },
+  { name:'Yang',     hcp:19, team:'usa', days:['fri','sat'] },
 ];
 
 // ══ SCORE STATE ══
@@ -726,6 +728,8 @@ function grossToStab(gross, hcp, h, course) {
 
 function playerDayTotal(name, day) {
   const p = getPlayer(name); if (!p) return null;
+  // If player isn't scheduled for this day, return null (not applicable)
+  if (p.days && !p.days.includes(day)) return null;
   const c = courseForDay(day);
   let total = 0, any = false;
   for (let h = 0; h < 18; h++) {
@@ -874,7 +878,7 @@ function getMatchProjection(matchId) {
   const projGeo = ahead === 'geo' ? m.pts : 0;
   const projUsa = ahead === 'usa' ? m.pts : 0;
   return {
-    text: `${ahead === 'geo' ? 'GEO' : 'USA'} on track · ${m.pts}-0`,
+    text: `${ahead === 'geo' ? 'GA' : 'USA'} on track · ${m.pts}-0`,
     color: winColor,
     decisive: lead > Math.floor(hr / 2)
   };
@@ -933,21 +937,52 @@ function renderEntryTab() {
 }
 
 function buildWhoScreen() {
-  let geoButtons = '', usaButtons = '';
-  PLAYERS.filter(p => p.team === 'geo').forEach(p => {
-    geoButtons += `<button class="who-btn geo" onclick="selectPlayer('${p.name}')">${p.name}<span class="who-hcp">HCP ${p.hcp}</span></button>`;
-  });
-  PLAYERS.filter(p => p.team === 'usa').forEach(p => {
-    usaButtons += `<button class="who-btn usa" onclick="selectPlayer('${p.name}')">${p.name}<span class="who-hcp">HCP ${p.hcp}</span></button>`;
-  });
+  const buildTeamBtn = p => {
+    const dayTag = p.days && p.days.length === 1
+      ? `<span style="display:block;font-size:0.48rem;opacity:0.6;margin-top:1px">${p.days[0].toUpperCase()} ONLY</span>` : '';
+    return `<button class="who-btn ${p.team}" onclick="selectPlayer('${p.name}')">${p.name}<span class="who-hcp">HCP ${p.hcp}</span>${dayTag}</button>`;
+  };
+
+  const geoButtons = PLAYERS.filter(p => p.team === 'geo').map(buildTeamBtn).join('');
+  const usaButtons = PLAYERS.filter(p => p.team === 'usa').map(buildTeamBtn).join('');
+
   return `<div class="who-screen">
     <div class="who-logo"></div>
     <div class="who-title">Who are you?</div>
-    <div class="who-sub">Pick your name to start entering scores</div>
-    <div class="who-team-label" style="color:var(--geo)">Team Georgia</div>
-    <div class="who-grid">${geoButtons}</div>
-    <div class="who-team-label" style="color:var(--usa);margin-top:14px">Team USA</div>
-    <div class="who-grid">${usaButtons}</div>
+    <div class="who-sub">Select your name to start entering scores</div>
+
+    <div style="width:100%;max-width:360px;margin-top:4px;">
+      <!-- Team headers -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px;">
+        <div style="background:rgba(224,85,85,0.08);border:1.5px solid rgba(224,85,85,0.3);border-radius:8px;padding:8px;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:0.65rem;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:var(--geo);">
+          &#127988; Team Georgia
+        </div>
+        <div style="background:rgba(85,144,232,0.08);border:1.5px solid rgba(85,144,232,0.3);border-radius:8px;padding:8px;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:0.65rem;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:var(--usa);">
+          &#127988; Team USA
+        </div>
+      </div>
+      <!-- Player rows -- paired so each row is same height -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+        ${(()=>{
+          const geo = PLAYERS.filter(p=>p.team==='geo');
+          const usa = PLAYERS.filter(p=>p.team==='usa');
+          const maxLen = Math.max(geo.length, usa.length);
+          let rows = '';
+          for (let i=0; i<maxLen; i++) {
+            const gp = geo[i];
+            const up = usa[i];
+            const makeBtn = (p, team) => {
+              if (!p) return '<div></div>';
+              const dayTag = p.days&&p.days.length===1
+                ? `<span style="font-size:0.5rem;opacity:0.6;display:block;margin-top:1px">${p.days[0].toUpperCase()} ONLY</span>` : '';
+              return `<button class="who-btn ${team}" onclick="selectPlayer('${p.name}')" style="width:100%;height:100%">${p.name}<span class="who-hcp">HCP ${p.hcp}</span>${dayTag}</button>`;
+            };
+            rows += makeBtn(gp,'geo') + makeBtn(up,'usa');
+          }
+          return rows;
+        })()}
+      </div>
+    </div>
   </div>`;
 }
 
@@ -955,6 +990,12 @@ function selectPlayer(name) {
   currentPlayer = name;
   localStorage.setItem('gsi_player', name);
   document.getElementById('enter-score-btn').style.display = '';
+  // Auto-set day based on which days this player is scheduled
+  const p = getPlayer(name);
+  if (p && p.days && p.days.length === 1) {
+    currentDay = p.days[0];
+    localStorage.setItem('gsi_day', currentDay);
+  }
   renderEntryTab();
   updateScoreboard();
 }
@@ -1003,12 +1044,12 @@ function buildEntryCard(p, day, course, scores, hole, progress) {
       <button class="entry-change-btn" onclick="changePlayer()">Change</button>
     </div>
     <div style="display:flex;gap:6px;margin-bottom:10px;">
-      <button onclick="switchDay('fri')" style="flex:1;font-family:'Barlow Condensed',sans-serif;font-size:0.78rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:8px;border-radius:8px;border:1.5px solid ${day==='fri'?'var(--gold)':'var(--border2)'};background:${day==='fri'?'var(--gold-dim)':'transparent'};color:${day==='fri'?'var(--gold)':'var(--text-dim)'};cursor:pointer;">
+      ${!p.days || p.days.includes('fri') ? `<button onclick="switchDay('fri')" style="flex:1;font-family:'Barlow Condensed',sans-serif;font-size:0.78rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:8px;border-radius:8px;border:1.5px solid ${day==='fri'?'var(--gold)':'var(--border2)'};background:${day==='fri'?'var(--gold-dim)':'transparent'};color:${day==='fri'?'var(--gold)':'var(--text-dim)'};cursor:pointer;">
         Friday &middot; Kiva Dunes
-      </button>
-      <button onclick="switchDay('sat')" style="flex:1;font-family:'Barlow Condensed',sans-serif;font-size:0.78rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:8px;border-radius:8px;border:1.5px solid ${day==='sat'?'var(--gold)':'var(--border2)'};background:${day==='sat'?'var(--gold-dim)':'transparent'};color:${day==='sat'?'var(--gold)':'var(--text-dim)'};cursor:pointer;">
+      </button>` : ''}
+      ${!p.days || p.days.includes('sat') ? `<button onclick="switchDay('sat')" style="flex:1;font-family:'Barlow Condensed',sans-serif;font-size:0.78rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:8px;border-radius:8px;border:1.5px solid ${day==='sat'?'var(--gold)':'var(--border2)'};background:${day==='sat'?'var(--gold-dim)':'transparent'};color:${day==='sat'?'var(--gold)':'var(--text-dim)'};cursor:pointer;">
         Saturday &middot; Cotton Creek
-      </button>
+      </button>` : ''}
     </div>
     <div class="hole-progress"><div class="hole-progress-fill" style="width:${(progress/18)*100}%"></div></div>
     <div class="hole-card">
@@ -1105,11 +1146,14 @@ function buildRoundComplete(p, day, course, scores) {
       </div>
       <button class="entry-change-btn" onclick="changePlayer()">Change</button>
     </div>
-    <div class="round-done">
+    <div class="round-done" style="border-color:${p.team==='geo'?'rgba(224,85,85,0.35)':'rgba(85,144,232,0.35)'};background:linear-gradient(135deg,${p.team==='geo'?'rgba(224,85,85,0.08)':'rgba(85,144,232,0.08)'},rgba(232,204,0,0.04));">
       <div class="round-done-icon">&#127958;</div>
       <div class="round-done-title">Round Complete</div>
       <div class="round-done-total">${total} pts</div>
       <div class="round-done-sub">Gross ${gross} &middot; ${holesPlayed} holes &middot; Net Stableford</div>
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid ${p.team==='geo'?'rgba(224,85,85,0.2)':'rgba(85,144,232,0.2)'};font-family:'Barlow Condensed',sans-serif;font-size:0.72rem;font-weight:700;color:${p.team==='geo'?'var(--geo)':'var(--usa)'};letter-spacing:0.06em;">
+        ${total} pts contributed to Team ${p.team==='geo'?'Georgia':'USA'} &middot; ${day==='fri'?'Friday':'Saturday'}
+      </div>
     </div>
     ${buildRow(0)}
     ${buildRow(9)}
@@ -1411,7 +1455,7 @@ function renderMatchCard() {
     html += `<div class="sc-tot" style="font-size:0.72rem;color:var(--text-mid)">${parSum}</div>`;
 
     // For each team, show best ball score per hole
-    const sides = [{key:'geo',label:'GEO',color:'var(--geo)'},{key:'usa',label:'USA',color:'var(--usa)'}];
+    const sides = [{key:'geo',label:'GA',color:'var(--geo)'},{key:'usa',label:'USA',color:'var(--usa)'}];
     sides.forEach(side => {
       html += `<div class="sc-lbl" style="color:${side.color}">${side.label}</div>`;
       let gSum=0, gCount=0;
@@ -1508,11 +1552,24 @@ function openHoleModal(matchId, hole) {
   const day = matchId.startsWith('s')?'sat':'fri';
   const par = course.pars[hole];
 
-  document.getElementById('hm-title').textContent = `Hole ${hole+1} &middot; Par ${par} &middot; ${course.name}`;
+  document.getElementById('hm-title').innerHTML = `Hole ${hole+1} &middot; Par ${par} &middot; ${course.name}`;
 
+  // Show concession status if this hole was conceded
+  const cv = concessions[modalMatchId]?.[hole];
+  let body = '';
+  if (cv) {
+    const winLabel = cv === 'geo' ? m.geo.join(' + ') : m.usa.join(' + ');
+    const winColor = cv === 'geo' ? 'var(--geo)' : 'var(--usa)';
+    body += `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;margin-bottom:4px;border-bottom:1px solid var(--border);">
+      <div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:0.6rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-dim);">Hole Conceded</div>
+        <div style="font-size:0.88rem;font-weight:600;color:${winColor};margin-top:2px;">${winLabel} wins this hole</div>
+      </div>
+      <div style="font-size:0.7rem;color:var(--text-dim);">Tap "Clear / Undo Concede" below to undo</div>
+    </div>`;
+  }
   // Show all players in the match with their current scores
   const allPlayers = [...m.geo,...m.usa].filter(n=>n!=='TBD'&&n!=='KCopp/Yang');
-  let body = '';
   allPlayers.forEach(name => {
     const p = getPlayer(name);
     if (!p) return;
@@ -1554,9 +1611,16 @@ function confirmHoleModal() { closeHoleModal(); }
 function clearHoleModal() {
   const m = ALL_MATCHES.find(x=>x.id===modalMatchId);
   const day = modalMatchId.startsWith('s')?'sat':'fri';
+  // Clear scores
   [...m.geo,...m.usa].filter(n=>n!=='TBD'&&n!=='KCopp/Yang').forEach(name => {
     stabScores[name][day][modalHole] = null;
   });
+  // Also clear any concession on this hole
+  if (concessions[modalMatchId]) {
+    concessions[modalMatchId][modalHole] = null;
+    if (window.fbSaveConcessions) window.fbSaveConcessions(modalMatchId);
+  }
+  saveScoresToLocal();
   closeHoleModal();
 }
 function closeHoleModal() {
@@ -1567,13 +1631,13 @@ function closeHoleModal() {
 
 function openConcede() {
   const m = ALL_MATCHES.find(x=>x.id===modalMatchId);
-  document.getElementById('concede-title').textContent = `Hole ${modalHole+1} -- Who concedes?`;
+  document.getElementById('concede-title').innerHTML = `Hole ${modalHole+1} &mdash; Who concedes?`;
   document.getElementById('concede-grid').innerHTML = `
     <button class="concede-btn" style="color:var(--geo);border-color:var(--geo);background:var(--geo-dim)" onclick="confirmConcede('usa')">
       ${m.geo.join(' + ')}<br><span style="font-size:0.58rem;opacity:0.7">concedes &mdash; USA wins</span>
     </button>
     <button class="concede-btn" style="color:var(--usa);border-color:var(--usa);background:var(--usa-dim)" onclick="confirmConcede('geo')">
-      ${m.usa.join(' + ')}<br><span style="font-size:0.58rem;opacity:0.7">concedes &mdash; GEO wins</span>
+      ${m.usa.join(' + ')}<br><span style="font-size:0.58rem;opacity:0.7">concedes &mdash; GA wins</span>
     </button>`;
   document.getElementById('hole-modal').style.display = 'none';
   document.getElementById('concede-modal').style.display = 'block';
@@ -1602,6 +1666,41 @@ function renderLeaderboard() {
     return {...p, fri, sat, total:(fri??0)+(sat??0), hasData:fri!==null||sat!==null};
   }).filter(p=>p.hasData).sort((a,b)=>b.total-a.total);
 
+  // Team Stableford aggregate
+  const teamSummaryEl = document.getElementById('team-stab-summary');
+  if (teamSummaryEl && rows.length > 0) {
+    const geoTotal = rows.filter(p=>p.team==='geo').reduce((s,p)=>s+p.total,0);
+    const usaTotal = rows.filter(p=>p.team==='usa').reduce((s,p)=>s+p.total,0);
+    const geoCount = rows.filter(p=>p.team==='geo').length;
+    const usaCount = rows.filter(p=>p.team==='usa').length;
+    const geoAvg = geoCount ? (geoTotal/geoCount).toFixed(1) : 0;
+    const usaAvg = usaCount ? (usaTotal/usaCount).toFixed(1) : 0;
+    const leader = geoTotal > usaTotal ? 'geo' : usaTotal > geoTotal ? 'usa' : 'tied';
+
+    teamSummaryEl.style.display = 'block';
+    teamSummaryEl.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr auto 1fr;background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;">
+        <div style="padding:14px 12px;background:var(--geo-dim);display:flex;flex-direction:column;align-items:center;gap:3px;">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:0.58rem;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;color:var(--geo)">Georgia</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:2rem;font-weight:900;color:var(--geo);line-height:1">${geoTotal}</div>
+          <div style="font-size:0.6rem;color:var(--text-dim)">avg ${geoAvg} / player</div>
+        </div>
+        <div style="padding:12px 10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border-left:1px solid var(--border);border-right:1px solid var(--border);">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:0.58rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-dim)">Team Stableford</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:0.65rem;font-weight:800;padding:3px 10px;border-radius:20px;
+            ${leader==='geo'?'background:rgba(224,85,85,0.2);color:var(--geo)':leader==='usa'?'background:rgba(85,144,232,0.2);color:var(--usa)':'background:rgba(232,204,0,0.15);color:var(--gold)'}">
+            ${leader==='geo'?'GA Leads':leader==='usa'?'USA Leads':'Tied'}
+          </div>
+          <div style="font-size:0.55rem;color:var(--text-dim);text-align:center">Combined pts<br>all players</div>
+        </div>
+        <div style="padding:14px 12px;background:var(--usa-dim);display:flex;flex-direction:column;align-items:center;gap:3px;">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:0.58rem;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;color:var(--usa)">USA</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:2rem;font-weight:900;color:var(--usa);line-height:1">${usaTotal}</div>
+          <div style="font-size:0.6rem;color:var(--text-dim)">avg ${usaAvg} / player</div>
+        </div>
+      </div>`;
+  }
+
   if (!rows.length) {
     document.getElementById('lb-rows').innerHTML = `<div style="padding:14px;font-size:0.78rem;color:var(--text-dim)">No scores yet -- enter yours in the My Score tab.</div>`;
     return;
@@ -1610,7 +1709,7 @@ function renderLeaderboard() {
     const tc = p.team==='geo'?'var(--geo)':'var(--usa)';
     return `<div class="lb-row">
       <div class="lb-rank" style="${i===0?'color:var(--gold)':''}">${i===0?'&#127942;':i+1}</div>
-      <div class="lb-name">${p.name} <span style="font-size:0.52rem;color:${tc};font-family:'Barlow Condensed',sans-serif;font-weight:800">${p.team.toUpperCase()}</span></div>
+      <div class="lb-name">${p.name} <span style="font-size:0.52rem;color:${tc};font-family:'Barlow Condensed',sans-serif;font-weight:800">${p.team === 'geo' ? 'GA' : 'USA'}</span></div>
       <div class="lb-day">${p.fri!==null?p.fri:'--'}</div>
       <div class="lb-day">${p.sat!==null?p.sat:'--'}</div>
       <div class="lb-total">${p.total}</div>
@@ -1676,7 +1775,7 @@ function buildChampionScreen(data) {
     const tc = p.team === 'geo' ? 'var(--geo)' : 'var(--usa)';
     return `<div style="display:flex;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:0.78rem;font-weight:800;color:${i===0?'var(--gold)':'var(--text-dim)'};width:24px;text-align:center">${i===0?'🏅':i+1}</div>
-      <div style="flex:1;font-size:0.88rem;font-weight:500">${p.name} <span style="font-size:0.55rem;color:${tc};font-family:'Barlow Condensed',sans-serif;font-weight:800">${p.team.toUpperCase()}</span></div>
+      <div style="flex:1;font-size:0.88rem;font-weight:500">${p.name} <span style="font-size:0.55rem;color:${tc};font-family:'Barlow Condensed',sans-serif;font-weight:800">${p.team === 'geo' ? 'GA' : 'USA'}</span></div>
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:0.88rem;font-weight:800;color:var(--gold)">${p.total}</div>
     </div>`;
   }).join('');
@@ -1695,7 +1794,7 @@ function updateScoreboard() {
   document.getElementById('geo-total').textContent = fmtPts(geo);
   document.getElementById('usa-total').textContent = fmtPts(usa);
   const pill = document.getElementById('lead-pill');
-  if(geo>usa){pill.textContent=`GEO ${fmtPts(geo)}-${fmtPts(usa)}`;pill.className='lead-pill lead-geo';}
+  if(geo>usa){pill.textContent=`GA ${fmtPts(geo)}-${fmtPts(usa)}`;pill.className='lead-pill lead-geo';}
   else if(usa>geo){pill.textContent=`USA ${fmtPts(usa)}-${fmtPts(geo)}`;pill.className='lead-pill lead-usa';}
   else{pill.textContent=geo>0?`Tied ${fmtPts(geo)}-${fmtPts(usa)}`:'All Square';pill.className='lead-pill lead-tied';}
 
@@ -1737,7 +1836,7 @@ function updateScoreboard() {
         let groupBg = 'background:rgba(255,255,255,.05);color:var(--text-dim)';
         let groupTxt = 'Not Started';
         if(geoPts > 0 || usaPts > 0) {
-          if(geoPts > usaPts){groupBg='background:rgba(224,85,85,.15);color:var(--geo)';groupTxt=`GEO ${geoPts}-${usaPts}`;}
+          if(geoPts > usaPts){groupBg='background:rgba(224,85,85,.15);color:var(--geo)';groupTxt=`GA ${geoPts}-${usaPts}`;}
           else if(usaPts > geoPts){groupBg='background:rgba(85,144,232,.15);color:var(--usa)';groupTxt=`USA ${usaPts}-${geoPts}`;}
           else{groupBg='background:rgba(232,204,0,.12);color:var(--gold)';groupTxt=`Tied ${geoPts}-${usaPts}`;}
         }
@@ -1777,11 +1876,11 @@ function updateScoreboard() {
         const st = getMatchStatus(m.id);
         let bg='background:rgba(255,255,255,.05);color:var(--text-dim)',txt=st.status==='not-started'?'Not Started':st.text;
         if(st.status==='complete'){
-          if(st.ahead==='geo'){bg='background:rgba(224,85,85,.18);color:var(--geo)';txt=`GEO ${st.text}`;}
+          if(st.ahead==='geo'){bg='background:rgba(224,85,85,.18);color:var(--geo)';txt=`GA ${st.text}`;}
           else if(st.ahead==='usa'){bg='background:rgba(85,144,232,.18);color:var(--usa)';txt=`USA ${st.text}`;}
           else{bg='background:rgba(232,204,0,.15);color:var(--gold)';txt='Halved';}
         } else if(st.status==='live'){
-          if(st.ahead==='geo'){bg='background:rgba(224,85,85,.12);color:var(--geo)';txt=`GEO ${st.text} (T${st.holesPlayed})`;}
+          if(st.ahead==='geo'){bg='background:rgba(224,85,85,.12);color:var(--geo)';txt=`GA ${st.text} (T${st.holesPlayed})`;}
           else if(st.ahead==='usa'){bg='background:rgba(85,144,232,.12);color:var(--usa)';txt=`USA ${st.text} (T${st.holesPlayed})`;}
           else{bg='background:rgba(232,204,0,.1);color:var(--gold)';txt=`AS (T${st.holesPlayed})`;}
         }
@@ -1818,15 +1917,16 @@ function updateScoreboard() {
 
   document.getElementById('sb-leaders').innerHTML = rows.length ? rows.map((p,i) => {
     const tc=p.team==='geo'?'var(--geo)':'var(--usa)';
+    const sdTag = p.days&&p.days.length===1 ? `<span style="font-size:0.45rem;color:var(--text-dim);font-family:'Barlow Condensed',sans-serif;font-weight:700;margin-left:4px">${p.days[0].toUpperCase()} ONLY</span>` : '';
     return `<div class="leader-entry">
       <div class="leader-rank" style="${i===0?'color:var(--gold)':''}">${i===0?'&#127942;':i+1}</div>
-      <div class="leader-name">${p.name} <span style="font-size:0.52rem;color:${tc};font-family:'Barlow Condensed',sans-serif;font-weight:800">${p.team.toUpperCase()}</span></div>
+      <div class="leader-name">${p.name} <span style="font-size:0.52rem;color:${tc};font-family:'Barlow Condensed',sans-serif;font-weight:800">${p.team === 'geo' ? 'GA' : 'USA'}</span>${sdTag}</div>
       <div class="leader-pts">${p.total}</div>
     </div>`;
   }).join('') : '<div style="padding:12px;font-size:0.78rem;color:var(--text-dim)">Scores will appear here once players start entering.</div>';
 
   // Re-render leaderboard if visible
-  if(document.getElementById('tab-leaderboard').classList.contains('active')) renderLeaderboard();
+  if (document.getElementById('tab-leaderboard').classList.contains('active')) renderLeaderboard();
 }
 
 function jumpToMatch(matchId) {
@@ -1842,7 +1942,7 @@ function openHcpModal() {
     const tc = p.team==='geo'?'color:var(--geo)':'color:var(--usa)';
     return `<div class="hcp-row" style="flex-direction:column;align-items:stretch;gap:4px;">
       <div style="display:flex;align-items:center;justify-content:space-between;">
-        <div class="hcp-pname">${p.name} <span class="hcp-tag" style="${tc}">${p.team.toUpperCase()}</span></div>
+        <div class="hcp-pname">${p.name} <span class="hcp-tag" style="${tc}">${p.team === 'geo' ? 'GA' : 'USA'}</span></div>
         <div class="hcp-spinner">
           <button class="hcp-btn" onclick="adjHcp('${p.name}',-1)">-</button>
           <div class="hcp-val" id="hv-${p.name}">${p.hcp}</div>
