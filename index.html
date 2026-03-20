@@ -496,7 +496,7 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;font
     <div class="fmt-title">Friday &mdash; Four-Ball &middot; Kiva Dunes</div>
     <div class="fmt-body">
       <strong>Match 1 &amp; 2:</strong> 2v2 Better Ball &mdash; 2 pts each<br>
-      <strong>Match 3:</strong> Miguel vs KCopp (1 pt) + Miguel vs Yang (1 pt)<br>
+      <strong>Match 3:</strong> Miguel vs KCopp (1 pt) + Chris Jones vs KCopp (1 pt)<br>
       Total: <strong>6 points available</strong>. Ties = 0.5 pts each.<br>
       <span style="opacity:0.7;font-size:0.75rem">All match play decided on net scores (handicap-adjusted).</span>
     </div>
@@ -504,9 +504,9 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;font
   <div class="fmt-card">
     <div class="fmt-title">Saturday &mdash; Singles Match Play &middot; Cotton Creek</div>
     <div class="fmt-body">
-      Match 1: Mack vs Dustin &mdash; <strong>3 pts</strong><br>
+      Match 1: Dustin vs Mack &mdash; <strong>3 pts</strong><br>
       Match 2: Nathan vs Tolliver &mdash; <strong>3 pts</strong><br>
-      Match 3: Chris vs KCopp (1 pt) + Chris vs Yang (1 pt) &mdash; <strong>2 pts total</strong>
+      Match 3: Chris Jones vs KCopp (1 pt) + Chris Jones vs Yang (1 pt) &mdash; <strong>2 pts total</strong>
     </div>
   </div>
   <div class="fmt-card">
@@ -621,34 +621,33 @@ const courseForDay   = d  => d === 'sat' ? COURSES.cotton : COURSES.kiva;
 // ══ MATCHES ══
 const MATCHES = {
   fri: [
-    { id:'f1', label:'Match 1', pts:2, geo:['Dustin','Peyton'],  usa:['Mack','Connor'],   format:'better-ball' },
+    { id:'f1', label:'Match 1', pts:2, geo:['Dustin','Peyton'],  usa:['Mack','Yang'],     format:'better-ball' },
     { id:'f2', label:'Match 2', pts:2, geo:['Nathan','Kunal'],   usa:['Tolliver','Jerry'], format:'better-ball' },
-    { id:'f3a', label:'Match 3a', pts:1, geo:['Miguel'], usa:['KCopp'],  format:'singles', group:'Match 3 (Miguel vs KCopp & Yang)' },
-    { id:'f3b', label:'Match 3b', pts:1, geo:['Miguel'], usa:['Yang'],   format:'singles', group:'Match 3 (Miguel vs KCopp & Yang)' },
+    { id:'f3a', label:'Match 3a', pts:1, geo:['Miguel'],      usa:['KCopp'], format:'singles', group:'Match 3 (Miguel & Chris Jones vs KCopp)' },
+    { id:'f3b', label:'Match 3b', pts:1, geo:['Chris Jones'], usa:['KCopp'], format:'singles', group:'Match 3 (Miguel & Chris Jones vs KCopp)' },
   ],
   sat: [
     { id:'s1', label:'Match 1', pts:3, geo:['Dustin'],  usa:['Mack'],     format:'singles' },
     { id:'s2', label:'Match 2', pts:3, geo:['Nathan'],  usa:['Tolliver'], format:'singles' },
-    { id:'s3a', label:'Match 3a', pts:1, geo:['Chris'], usa:['KCopp'],   format:'singles', group:'Match 3 (Chris vs KCopp & Yang)' },
-    { id:'s3b', label:'Match 3b', pts:1, geo:['Chris'], usa:['Yang'],    format:'singles', group:'Match 3 (Chris vs KCopp & Yang)' },
+    { id:'s3a', label:'Match 3a', pts:1, geo:['Chris Jones'], usa:['KCopp'],   format:'singles', group:'Match 3 (Chris Jones vs KCopp & Yang)' },
+    { id:'s3b', label:'Match 3b', pts:1, geo:['Chris Jones'], usa:['Yang'],    format:'singles', group:'Match 3 (Chris Jones vs KCopp & Yang)' },
   ]
 };
 const ALL_MATCHES = [...MATCHES.fri, ...MATCHES.sat];
 
 // ══ PLAYERS ══
 let PLAYERS = [
-  { name:'Dustin',   hcp:6,  team:'geo', days:['fri','sat'] },
-  { name:'Peyton',   hcp:10, team:'geo', days:['fri'] },
-  { name:'Nathan',   hcp:8,  team:'geo', days:['fri','sat'] },
-  { name:'Kunal',    hcp:14, team:'geo', days:['fri'] },
-  { name:'Miguel',   hcp:18, team:'geo', days:['fri'] },
-  { name:'Chris',    hcp:20, team:'geo', days:['sat'] },
-  { name:'Mack',     hcp:7,  team:'usa', days:['fri','sat'] },
-  { name:'Connor',   hcp:11, team:'usa', days:['fri'] },
-  { name:'Tolliver', hcp:9,  team:'usa', days:['fri','sat'] },
-  { name:'Jerry',    hcp:18, team:'usa', days:['fri'] },
-  { name:'KCopp',    hcp:13, team:'usa', days:['fri','sat'] },
-  { name:'Yang',     hcp:19, team:'usa', days:['fri','sat'] },
+  { name:'Dustin',      hcp:6,  team:'geo', days:['fri','sat'] },
+  { name:'Peyton',      hcp:10, team:'geo', days:['fri'] },
+  { name:'Nathan',      hcp:8,  team:'geo', days:['fri','sat'] },
+  { name:'Kunal',       hcp:14, team:'geo', days:['fri'] },
+  { name:'Miguel',      hcp:18, team:'geo', days:['fri'] },
+  { name:'Chris Jones', hcp:20, team:'geo', days:['fri','sat'] },
+  { name:'Mack',        hcp:7,  team:'usa', days:['fri','sat'] },
+  { name:'Tolliver',    hcp:9,  team:'usa', days:['fri','sat'] },
+  { name:'Jerry',       hcp:18, team:'usa', days:['fri'] },
+  { name:'KCopp',       hcp:13, team:'usa', days:['fri','sat'] },
+  { name:'Yang',        hcp:19, team:'usa', days:['fri','sat'] },
 ];
 
 // ══ SCORE STATE ══
